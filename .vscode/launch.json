@@ -1,0 +1,14 @@
+{
+    "configurations": [
+        {
+            "type": "java",
+            "name": "Spring Boot-Application<spring-skeleton>",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "console": "internalConsole",
+            "mainClass": "org.vaadin.example.Application",
+            "projectName": "spring-skeleton",
+            "args": ""
+        }
+    ]
+}
