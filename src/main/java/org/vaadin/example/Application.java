@@ -30,11 +30,11 @@ public class Application extends SpringBootServletInitializer {
         return (args) -> {
             log.info("======== CREATE PERSON =========");
             Person person = new Person(
-                "Janaina Santos",
-                LocalDate.parse("1988-01-20"),
+                "Janaina Bach",
+                LocalDate.parse("1975-01-20"),
                 "038.676.560-02",
                 "santos@gmail.com",
-                "Engenheiro(a)"
+                "Engenheira"
             );
             personRepository.save(person);
         };

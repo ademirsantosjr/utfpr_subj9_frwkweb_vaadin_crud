@@ -1,5 +1,6 @@
 package org.vaadin.example.model;
 
+import java.io.Serializable;
 import java.time.LocalDate;
 
 import javax.persistence.Column;
@@ -16,7 +17,7 @@ import org.hibernate.validator.constraints.br.CPF;
 import org.springframework.format.annotation.DateTimeFormat;
 
 @Entity
-public class Person {
+public class Person implements Serializable {
     
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -32,8 +33,8 @@ public class Person {
     private LocalDate birthDate;
 
     @Column(nullable = false, unique = true)
+    @Pattern(regexp = "^[0-9]{3}[.]?[0-9]{3}[.]?[0-9]{3}-[0-9]{2}$", message = "Informe o CPF no formato xxx.xxx.xxx-xx")
     @CPF(message = "Informe um CPF válido")
-    @Pattern(regexp = "^[0-9]{3}[.]?[0-9]{3}[.]?[0-9]{3}-[0-9]{2}$", message = "Formato Incorreto! Formato esperado: xxx.xxx.xxx-xx")
     private String cpf;
 
     @Column(nullable = false)
@@ -62,6 +63,10 @@ public class Person {
         this.cpf = cpf;
         this.email = email;
         this.profession = profession;
+    }
+
+    public Long getId() {
+        return id;
     }
 
     public LocalDate getBirthDate() {

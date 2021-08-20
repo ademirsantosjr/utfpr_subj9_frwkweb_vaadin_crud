@@ -11,6 +11,7 @@ import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.BeanValidationBinder;
 
 import org.vaadin.example.MainView;
+import org.vaadin.example.enums.CrudMode;
 import org.vaadin.example.model.Person;
 import org.vaadin.example.model.PersonRepository;
 
@@ -24,6 +25,7 @@ public class PersonForm extends FormLayout{
 
     private Button buttonSave = new Button("Salvar");
     private Button buttonEdit = new Button("Editar");
+    private Button buttonFechar = new Button("Fechar");
     private Button buttonDelete = new Button("Excluir");
 
     private ConfirmationDialog confirmationDialog = new ConfirmationDialog();
@@ -32,6 +34,8 @@ public class PersonForm extends FormLayout{
     
     private BeanValidationBinder<Person> binder = new BeanValidationBinder<>(Person.class);
     private PersonRepository personRepository;
+
+    private CrudMode crudMode;
     
     public PersonForm(MainView mainView, PersonRepository personRepository) {
         this.mainView = mainView;
@@ -52,14 +56,18 @@ public class PersonForm extends FormLayout{
         buttonSave.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         buttonSave.addClickListener(event -> save());
 
-        buttonDelete.getStyle().set("position", "absolute");
-        buttonDelete.getStyle().set("right", "16px");
+        buttonFechar.getStyle().set("position", "absolute");
+        buttonFechar.getStyle().set("right", "16px");
+        buttonFechar.addClickListener(even -> setPerson(null));
+
+        buttonEdit.addClickListener(event -> edit());
+
         buttonDelete.addThemeVariants(ButtonVariant.LUMO_ERROR);
         buttonDelete.addClickListener(event -> delete());
 
         getStyle().set("max-width", "400px");
 
-        HorizontalLayout buttons = new HorizontalLayout(buttonSave, buttonEdit, buttonDelete);
+        HorizontalLayout buttons = new HorizontalLayout(buttonSave, buttonEdit, buttonDelete, buttonFechar);
         add(fullName, birthDate, cpf, email, profession, buttons);
     }
 
@@ -68,14 +76,55 @@ public class PersonForm extends FormLayout{
 
         binder.validate();
 
-        if (!isDuplicated(person)) {            
-            personRepository.save(person);
+        switch(crudMode) {
 
-            mainView.updateGrid();
-            binder.setBean(new Person());
+            case CREATE:
+                if (!isDuplicated(person)) {            
+                    personRepository.save(person);
+        
+                    mainView.updateGrid();
+                    binder.setBean(new Person());
+        
+                    restartBinder();            
+                }
+            break;
 
-            restartBinder();            
-        }        
+            case UPDATE:
+                Person personToUpdate = personRepository.findById(person.getId()).get();
+                
+                personToUpdate.setFullName(fullName.getValue());
+                personToUpdate.setBirthDate(birthDate.getValue());        
+                personToUpdate.setCpf(cpf.getValue());
+                personToUpdate.setEmail(email.getValue());
+                personToUpdate.setProfession(profession.getValue());
+                
+                personRepository.saveAndFlush(personToUpdate);
+                
+                mainView.updateGrid();
+                
+                binder.setBean(new Person());        
+                
+                restartBinder();
+            break;
+
+            default: return;
+        }     
+
+                
+    }
+
+    private void edit() {
+        crudMode = CrudMode.UPDATE;
+
+        buttonSave.setEnabled(true);
+        buttonDelete.setEnabled(true);
+        buttonEdit.setEnabled(false);
+
+        fullName.setEnabled(true);
+        birthDate.setEnabled(true);
+        cpf.setEnabled(true);
+        email.setEnabled(true);
+        profession.setEnabled(true);
     }
 
     private void delete() {
@@ -128,7 +177,7 @@ public class PersonForm extends FormLayout{
         }
 
         return isDuplicated;
-    }
+    } 
 
     private void restartBinder() {
         binder.removeBinding(cpf);
@@ -152,12 +201,14 @@ public class PersonForm extends FormLayout{
                 buttonDelete.setEnabled(true);
                 buttonEdit.setEnabled(true);
 
-                //fullName.setEnabled(false);
+                fullName.setEnabled(false);
                 birthDate.setEnabled(false);
                 cpf.setEnabled(false);
                 email.setEnabled(false);
                 profession.setEnabled(false);
             } else {
+                crudMode = CrudMode.CREATE;
+                
                 buttonSave.setEnabled(true);
                 buttonDelete.setEnabled(false);
                 buttonEdit.setEnabled(false);
