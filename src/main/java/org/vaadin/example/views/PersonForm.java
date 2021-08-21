@@ -1,5 +1,6 @@
 package org.vaadin.example.views;
 
+import java.time.LocalDate;
 import java.util.Locale;
 
 import com.vaadin.flow.component.button.Button;
@@ -46,6 +47,7 @@ public class PersonForm extends FormLayout{
         binder.bindInstanceFields(this);
         
         birthDate.setLocale(new Locale("pt", "BR"));
+        birthDate.setMax(LocalDate.now());
         birthDate.setRequiredIndicatorVisible(true);
 
         cpf.setRequiredIndicatorVisible(true);
@@ -56,12 +58,13 @@ public class PersonForm extends FormLayout{
         buttonSave.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         buttonSave.addClickListener(event -> save());
 
-        buttonFechar.getStyle().set("position", "absolute");
-        buttonFechar.getStyle().set("right", "16px");
         buttonFechar.addClickListener(even -> setPerson(null));
 
+        buttonEdit.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         buttonEdit.addClickListener(event -> edit());
 
+        buttonDelete.getStyle().set("position", "absolute");
+        buttonDelete.getStyle().set("right", "16px");
         buttonDelete.addThemeVariants(ButtonVariant.LUMO_ERROR);
         buttonDelete.addClickListener(event -> delete());
 
@@ -74,12 +77,20 @@ public class PersonForm extends FormLayout{
     private void save() {
         Person person = binder.getBean();
 
-        binder.validate();
+        if (binder.hasChanges()) {
+            person.setFullName(fullName.getValue());
+            person.setBirthDate(birthDate.getValue());
+            person.setCpf(cpf.getValue());
+            person.setEmail(email.getValue());
+            person.setProfession(profession.getValue());
+        }
+
+        binder.validate();        
 
         switch(crudMode) {
 
             case CREATE:
-                if (!isDuplicated(person)) {            
+                if (!isDuplicated(person) && !isImpossibleBirthDate(person)) {            
                     personRepository.save(person);
         
                     mainView.updateGrid();
@@ -90,21 +101,23 @@ public class PersonForm extends FormLayout{
             break;
 
             case UPDATE:
-                Person personToUpdate = personRepository.findById(person.getId()).get();
-                
-                personToUpdate.setFullName(fullName.getValue());
-                personToUpdate.setBirthDate(birthDate.getValue());        
-                personToUpdate.setCpf(cpf.getValue());
-                personToUpdate.setEmail(email.getValue());
-                personToUpdate.setProfession(profession.getValue());
-                
-                personRepository.saveAndFlush(personToUpdate);
-                
-                mainView.updateGrid();
-                
-                binder.setBean(new Person());        
-                
-                restartBinder();
+                if (!isImpossibleBirthDate(person)) {
+                    Person personToUpdate = personRepository.findById(person.getId()).get();
+                    
+                    personToUpdate.setFullName(fullName.getValue());
+                    personToUpdate.setBirthDate(birthDate.getValue());        
+                    personToUpdate.setCpf(cpf.getValue());
+                    personToUpdate.setEmail(email.getValue());
+                    personToUpdate.setProfession(profession.getValue());
+                    
+                    personRepository.saveAndFlush(personToUpdate);
+                    
+                    mainView.updateGrid();
+                    
+                    binder.setBean(new Person());        
+                    
+                    restartBinder();
+                }
             break;
 
             default: return;
@@ -177,11 +190,26 @@ public class PersonForm extends FormLayout{
         }
 
         return isDuplicated;
-    } 
+    }
+
+    private boolean isImpossibleBirthDate(Person person) {
+        boolean isImpossibleBirthDate = person.getBirthDate().compareTo(LocalDate.now()) > 0;
+
+        binder.forField(birthDate)
+            .withValidator(
+                v -> person.getBirthDate().compareTo(LocalDate.now()) <= 0,
+                "Data de nascimento impossível!")
+            .bind("birthDate");
+        
+        binder.validate();
+
+        return isImpossibleBirthDate;
+    }
 
     private void restartBinder() {
         binder.removeBinding(cpf);
         binder.removeBinding(email);
+        binder.removeBinding(birthDate);
         binder.bindInstanceFields(this);
     }
 
