@@ -28,15 +28,25 @@ public class Application extends SpringBootServletInitializer {
     @Bean
     public CommandLineRunner demo(PersonRepository personRepository) {
         return (args) -> {
-            log.info("======== CREATE PERSON =========");
-            Person person = new Person(
+            log.info("======== CREATE Janaina =========");
+            Person person1 = new Person(
                 "Janaina Bach",
                 LocalDate.parse("1975-01-20"),
                 "038.676.560-02",
-                "santos@gmail.com",
+                "bach@gmail.com",
                 "Engenheira"
             );
-            personRepository.save(person);
+            personRepository.save(person1);
+
+            log.info("======== CREATE Pedro =========");
+            Person person2 = new Person(
+                "Pedro Macedo",
+                LocalDate.parse("2001-10-15"),
+                "700.726.260-03",
+                "macedo@yahoo.com",
+                "Professor"
+            );
+            personRepository.save(person2);
         };
     }
 

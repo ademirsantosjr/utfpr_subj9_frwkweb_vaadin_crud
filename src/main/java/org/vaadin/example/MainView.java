@@ -27,9 +27,9 @@ import org.vaadin.example.views.PersonForm;
  * browser tab/window.
  */
 @Route
-@PWA(name = "Vaadin Application",
-        shortName = "Vaadin App",
-        description = "This is an example Vaadin application.",
+@PWA(name = "Formulário de cadastro de pessoas",
+        shortName = "Formulário",
+        description = "Exemplo de um formuálio de cadastro de pessoas utilizando Vaadin framework",
         enableInstallPrompt = false)
 @CssImport("./styles/shared-styles.css")
 @CssImport(value = "./styles/vaadin-text-field-styles.css", themeFor = "vaadin-text-field")
